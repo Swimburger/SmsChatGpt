@@ -9,16 +9,11 @@ using Twilio.AspNet.Core;
 using Twilio.Clients;
 using Twilio.Rest.Api.V2010.Account;
 
+namespace SmsChatGpt;
+
 public class Program
 {
     private const string PreviousMessagesKey = "PreviousMessages";
-    private static readonly CookieOptions CookieOptions = new()
-    {
-        HttpOnly = true,
-        SameSite = SameSiteMode.Strict,
-        Secure = true
-    };
-
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
@@ -45,6 +40,8 @@ public class Program
         app.UseSession();
 
         app.UseForwardedHeaders();
+
+        app.UseTwilioRequestValidation();
 
         app.MapPost("/message", async (
             HttpContext context,
