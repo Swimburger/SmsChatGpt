@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Betalgo.OpenAI.GPT3" Version="6.7.0" />
-    <PackageReference Include="Twilio" Version="6.2.4" />
+    <PackageReference Include="Betalgo.OpenAI.GPT3" Version="6.7.3" />
+    <PackageReference Include="Twilio" Version="6.2.5" />
     <PackageReference Include="Twilio.AspNet.Core" Version="8.0.0" />
   </ItemGroup>
 

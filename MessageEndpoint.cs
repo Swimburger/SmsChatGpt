@@ -61,7 +61,7 @@ public static class MessageEndpoint
             messages
         );
 
-        messages.Add(ChatMessage.FromAssistance(chatResponse));
+        messages.Add(ChatMessage.FromAssistant(chatResponse));
         SetPreviousMessages(session, messages);
 
         // 320 is the recommended message length for maximum deliverability,
