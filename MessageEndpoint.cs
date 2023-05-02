@@ -55,24 +55,28 @@ public static class MessageEndpoint
         // hence I'm hashing the phone number to not pass in PII unnecessarily
         var userId = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(receivedFrom)));
 
-        string chatResponse = await GetChatResponse(
-            openAiService,
-            userId,
-            messages
-        );
+        _ = Task.Run(async () =>
+        {
+            string chatResponse = await GetChatResponse(
+                openAiService,
+                userId,
+                messages,
+                cancellationToken
+            );
 
-        messages.Add(ChatMessage.FromAssistant(chatResponse));
-        SetPreviousMessages(session, messages);
+            messages.Add(ChatMessage.FromAssistant(chatResponse));
+            SetPreviousMessages(session, messages);
 
-        // 320 is the recommended message length for maximum deliverability,
-        // but you can change this to your preference. The max for a Twilio message is 1600 characters.
-        // https://support.twilio.com/hc/en-us/articles/360033806753-Maximum-Message-Length-with-Twilio-Programmable-Messaging
-        var responseMessages = SplitTextIntoMessages(chatResponse, maxLength: 320);
+            // 320 is the recommended message length for maximum deliverability,
+            // but you can change this to your preference. The max for a Twilio message is 1600 characters.
+            // https://support.twilio.com/hc/en-us/articles/360033806753-Maximum-Message-Length-with-Twilio-Programmable-Messaging
+            var responseMessages = SplitTextIntoMessages(chatResponse, maxLength: 320);
 
-        // Twilio webhook expects a response within 10 seconds.
-        // we don't need to wait for the SendResponse task to complete, so don't await
-        var _ = SendResponse(twilioClient, to: receivedFrom, from: sentTo, responseMessages);
-
+            // Twilio webhook expects a response within 10 seconds.
+            // we don't need to wait for the SendResponse task to complete, so don't await
+            await SendResponse(twilioClient, to: receivedFrom, from: sentTo, responseMessages);
+        }, cancellationToken);
+        
         return Results.Ok();
     }
 
@@ -117,16 +121,18 @@ public static class MessageEndpoint
     private static async Task<string> GetChatResponse(
         IOpenAIService openAiService,
         string userId,
-        List<ChatMessage> messages
+        List<ChatMessage> messages,
+        CancellationToken cancellationToken
     )
     {
         var completionResult = await openAiService.ChatCompletion.CreateCompletion(
             new ChatCompletionCreateRequest
             {
                 Messages = messages,
-                Model = Models.ChatGpt3_5Turbo,
+                Model = Models.Gpt_4,
                 User = userId
-            }
+            },
+            cancellationToken: cancellationToken
         );
 
         if (!completionResult.Successful)
